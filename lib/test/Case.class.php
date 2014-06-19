@@ -385,15 +385,6 @@ abstract class Test_Case extends PHPUnit_Framework_TestCase
       ));
     }
 
-    if( sfConfig::get('sf_error_reporting') !== (E_ALL | E_STRICT) )
-    {
-      self::_halt('error_reporting should be set to %d (%s) in %s.',
-        (E_ALL | E_STRICT),
-        'E_ALL | E_STRICT', // Split out for easy editing if necessary.
-        $this->_getSettingsFilename()
-      );
-    }
-
     /* In same places, Symfony checks for sf_test rather than sf_environment.
      *  Since we've just finished verifying that we're in the test environment,
      *  we can also assume that test mode is on.
