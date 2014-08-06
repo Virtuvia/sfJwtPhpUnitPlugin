@@ -75,7 +75,7 @@ abstract class Test_Case extends PHPUnit_Framework_TestCase
   /** @var Test_FixtureLoader */
   private $_fixtureLoader;
   /** @var Test_State */
-  private $_state;
+  protected $_state;
 
   /** Accessor for the default application name.
    *
@@ -154,7 +154,7 @@ abstract class Test_Case extends PHPUnit_Framework_TestCase
     $configuration        = $this->getApplicationConfiguration();
 
     $this->_fixtureLoader = new Test_FixtureLoader($configuration);
-    $this->_state         = new Test_State($configuration);
+    $this->initState();
 
     /* Set custom sfConfig values here. */
     sfConfig::add(array(
@@ -170,6 +170,8 @@ abstract class Test_Case extends PHPUnit_Framework_TestCase
     $this->_init();
     $this->_setUp();
   }
+
+
 
   /** (Global) Clean up test environment.
    *
@@ -312,6 +314,11 @@ abstract class Test_Case extends PHPUnit_Framework_TestCase
     {
       throw new InvalidArgumentException(sprintf('No such task "%s".', $name));
     }
+  }
+
+  protected function initState() {
+      $configuration        = $this->getApplicationConfiguration();
+      $this->_state         = new Test_State($configuration);
   }
 
   /** Checks to make sure we have the correct version of PHPUnit installed.

@@ -45,6 +45,10 @@ class Test_State
   public function __construct( sfProjectConfiguration $configuration )
   {
     $this->_configuration = $configuration;
+    $this->initDb();
+  }
+
+  protected function initDb() {
     $this->_db            =
       Test_Database_Driver::factory($this->getDatabaseConnection());
   }

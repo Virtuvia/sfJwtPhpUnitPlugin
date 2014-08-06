@@ -84,62 +84,11 @@ class Test_Database_Driver
        */
       if( empty(self::$_dbRebuilt) or $rebuild )
       {
-        /* Don't try to drop the database unless it exists. */
-        $name = $this->getDatabaseName();
-        /** @noinspection PhpUndefinedFieldInspection */
-        if( $name and $this->_connection->import->databaseExists($name) )
-        {
-          $this->_connection->dropDatabase();
-        }
-
-        $this->_connection->createDatabase();
-
-        Doctrine_Core::loadModels(
-          sfConfig::get('sf_lib_dir').'/model/doctrine',
-          Doctrine_Core::MODEL_LOADING_CONSERVATIVE
-        );
-        Doctrine_Core::createTablesFromArray(Doctrine_Core::getLoadedModels());
-
-        self::$_dbRebuilt = true;
+        $this->_loadModels();
       }
       else
       {
-        /* Determine the order we need to load models. */
-        if( ! isset(self::$_dbFlushTree) )
-        {
-          /** @noinspection PhpUndefinedFieldInspection */
-          $models = $this->_connection->unitOfWork->buildFlushTree(
-            Doctrine_Core::getLoadedModels()
-          );
-          self::$_dbFlushTree = array_reverse($models);
-        }
-
-        $this->_doPreFlush();
-
-        /* Delete records, paying special attention to SoftDelete. */
-        foreach( self::$_dbFlushTree as $model )
-        {
-          $table = Doctrine_Core::getTable($model);
-
-          if( $table->hasTemplate('SoftDelete') )
-          {
-            /** @var $record Doctrine_Template_SoftDelete */
-            foreach( $table->createQuery()->execute() as $record )
-            {
-              $record->hardDelete();
-            }
-          }
-
-          $table->createQuery()->delete()->execute();
-          $table->clear();
-        }
-
-        $this->_doPostFlush();
-
-        /** Clear all Doctrine table repositories to prevent memory leaks
-         *    between tests.
-         */
-        $this->_connection->clear();
+        $this->_flushModels();
       }
     }
 
@@ -181,5 +130,67 @@ class Test_Database_Driver
    */
   protected function _doPostFlush(  )
   {
+  }
+
+  protected function _flushModels() {
+     /* Determine the order we need to load models. */
+    if( ! isset(self::$_dbFlushTree) )
+    {
+      /** @noinspection PhpUndefinedFieldInspection */
+      $models = $this->_connection->unitOfWork->buildFlushTree(
+        Doctrine_Core::getLoadedModels()
+      );
+      self::$_dbFlushTree = array_reverse($models);
+    }
+
+    $this->_doPreFlush();
+
+    /* Delete records, paying special attention to SoftDelete. */
+    foreach( self::$_dbFlushTree as $model )
+    {
+
+      $table = Doctrine_Core::getTable($model);
+
+      if( $table->hasTemplate('SoftDelete') )
+      {
+        /** @var $record Doctrine_Template_SoftDelete */
+        foreach( $table->createQuery()->execute() as $record )
+        {
+          $record->hardDelete();
+        }
+      }
+
+      $table->createQuery()->delete()->execute();
+      $table->clear();
+    }
+
+    $this->_doPostFlush();
+
+    /** Clear all Doctrine table repositories to prevent memory leaks
+     *    between tests.
+     */
+    $this->_connection->clear();
+  }
+
+  protected function _loadModels()
+  {
+    /* Don't try to drop the database unless it exists. */
+    $name = $this->getDatabaseName();
+    /** @noinspection PhpUndefinedFieldInspection */
+    if( $name and $this->_connection->import->databaseExists($name) )
+    {
+      $this->_connection->dropDatabase();
+    }
+
+    $this->_connection->createDatabase();
+
+    Doctrine_Core::loadModels(
+      sfConfig::get('sf_lib_dir').'/model/doctrine',
+      Doctrine_Core::MODEL_LOADING_CONSERVATIVE
+    );
+
+    Doctrine_Core::createTablesFromArray(Doctrine_Core::getLoadedModels());
+
+    self::$_dbRebuilt = true;
   }
 }
