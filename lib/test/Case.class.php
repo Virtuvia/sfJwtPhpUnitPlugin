@@ -71,7 +71,7 @@ abstract class Test_Case extends PHPUnit_Framework_TestCase
     $_alwaysRebuildDB = false;
 
   /** @var sfApplicationConfiguration */
-  private $_configuration;
+  protected $_configuration;
   /** @var Test_FixtureLoader */
   private $_fixtureLoader;
   /** @var Test_State */
@@ -349,7 +349,8 @@ abstract class Test_Case extends PHPUnit_Framework_TestCase
       $this->_application = self::getDefaultApplicationName();
     }
 
-    if( ! sfContext::hasInstance() )
+    // create the Context if it doesn't exist, or if AppConfig was invalidated
+    if( ! sfContext::hasInstance() || !isset($this->_configuration) )
     {
       sfContext::createInstance($this->getApplicationConfiguration());
     }
